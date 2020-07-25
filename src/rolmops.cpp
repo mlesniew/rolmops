@@ -3,8 +3,9 @@
 #include <LittleFS.h>
 #include <WiFiManager.h>
 #include <list>
+#include <Ticker>
 
-#define HOSTNAME "Ciego"
+#define HOSTNAME "Rolmops"
 #ifndef PASSWORD
 #define PASSWORD "rolek"
 #endif
@@ -12,6 +13,8 @@
 #define SR_LTCH D0
 #define SR_CLCK D1
 #define SR_DATA D2
+
+#define PIN_LED D4
 
 #define RELAY_ACTIVE_TIME 10000
 
@@ -149,8 +152,14 @@ void down(uint8_t mask) {
 void setup_server() {
 
     auto handler = [](std::function<void(uint8_t)> fn){
-        uint8_t mask = 0;
 
+        Ticker ticker;
+        ticker.attach_ms(50, []{
+            const auto current_state = digitalRead(PIN_LED);
+            digitalWrite(PIN_LED, !current_state);
+            });
+
+        uint8_t mask = 0;
 
         /* extract mask parameter */
         if (!server.hasArg("blinds")) {
@@ -185,12 +194,26 @@ void setup_server() {
 
 void setup() {
     Serial.begin(9600);
-    printf(HOSTNAME " " __DATE__ " " __TIME__ "\n");
+    printf(
+        "88''Yb  dP'Yb  88     8b    d8  dP'Yb  88''Yb .dP'Y8\n"
+        "88__dP dP   Yb 88     88b  d88 dP   Yb 88__dP `Ybo.'\n"
+        "88'Yb  Yb   dP 88  .o 88YbdP88 Yb   dP 88'''  o.`Y8b\n"
+        "88  Yb  YbodP  88ood8 88 YY 88  YbodP  88     8bodP'\n\n"
+        HOSTNAME " " __DATE__ " " __TIME__ "\n\n");
+
+    printf("Setup...\n");
+
+    // blink the diode really fast until setup() exits
+    pinMode(PIN_LED, OUTPUT);
+    Ticker ticker;
+    ticker.attach_ms(256, []{
+        const auto current_state = digitalRead(PIN_LED);
+        digitalWrite(PIN_LED, !current_state);
+        });
 
     pinMode(SR_LTCH, OUTPUT);
     pinMode(SR_CLCK, OUTPUT);
     pinMode(SR_DATA, OUTPUT);
-
     set_relays(0, 0);
 
     LittleFS.begin();
@@ -200,7 +223,36 @@ void setup() {
     printf("Setup complete.\n");
 }
 
+void check_wifi() {
+    static unsigned long wifi_last_connected = millis();
+    static auto wifi_last_status = WiFi.status();
+
+    const auto wifi_current_status = WiFi.status();
+    const bool connected = (wifi_current_status == WL_CONNECTED);
+
+    if (wifi_current_status != wifi_last_status) {
+        printf("WiFi %s (status changed to %i)\n", connected ? "connected" : "disconnected", wifi_current_status);
+        wifi_last_status = wifi_current_status;
+    }
+
+    if (connected) {
+        wifi_last_connected = millis();
+    } else if (millis() - wifi_last_connected > 2 * 60 * 1000) {
+        printf("WiFi has been disconnected for too long.\n");
+        reset();
+    }
+
+    {
+        // blink the builtin led to indicate WiFi state
+        const unsigned int mask = connected ? 0b1111 : 0b100;
+        // 1 tick ~= 128ms, 8 ticks ~= 1s
+        const auto blink_phase = (millis() >> 8) & mask;
+        digitalWrite(PIN_LED, (blink_phase == 0) ? LOW : HIGH);
+    }
+}
+
 void loop() {
     server.handleClient();
     handle_schedule_stops();
+    check_wifi();
 }
