@@ -107,14 +107,14 @@ int mask_from_comma_separated_list(const String & str) {
     while (1) {
         int comma_idx = str.indexOf(',', start_idx);
 
-        const auto value = (comma_idx < 0 ? str.substring(start_idx) : str.substring(start_idx, comma_idx)).toInt();
+        const long value = (comma_idx < 0 ? str.substring(start_idx) : str.substring(start_idx, comma_idx)).toInt();
         if ((value < 1) || (value > 8)) {
             // error, invalid value or error converting
             printf("Error at char %i.\n", start_idx);
             return 0;
         }
 
-        printf(" * %i\n", value);
+        printf(" * %li\n", value);
         ret |= 1 << (value - 1);
 
         if (comma_idx < 0)
