@@ -51,9 +51,8 @@
                         new_label = label.clone();
 
                         new_updown.find("#btn-up").click(function(){send_request(val, "up");});
-                        new_updown.find("#btn-st").click(function(){send_request(val, "stop");});
+                        new_updown.find("#btn-st").text(key).click(function(){send_request(val, "stop");});
                         new_updown.find("#btn-dn").click(function(){send_request(val, "down");});
-                        new_label.find('h4').text(key);
 
                         $("#smallbuttons").append(new_updown);
                         $("#smallbuttons").append(new_label);
@@ -94,15 +93,12 @@
 
         <div id="smallbuttons" class="row justify-content-left align-items-center">
 
-            <div id="smallupdown" class="col-5 col-sm-3 p-1" style="display:none">
+            <div id="smallupdown" class="col-12 col-sm-6 col-md-4 p-1" style="display:none">
                 <div class="btn-group btn-group-lg btn-block" role="group">
                     <button id="btn-up" type="button" class="btn btn-primary">&#9650;</button>
                     <button id="btn-st" type="button" class="btn btn-primary">&#8728;</button>
                     <button id="btn-dn" type="button" class="btn btn-primary">&#9660;</button>
                 </div>
-            </div>
-            <div id="smalllabel" class="col-7 col-sm-3" style="display:none">
-                <h4 class="display-4">button</h4>
             </div>
 
         </div>
