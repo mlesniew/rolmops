@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css">
+
+    <title>Rolek</title>
+
+    <!-- make it a mobile app -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#007bff">
+
+    <!-- favicons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <!-- scripts -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js"></script>
+    <script>
+
+    function send_request(blinds, command) {
+        url = "/" + command
+        if (blinds.length > 0)
+        {
+            url += "?blinds=" + blinds.join(",");
+        }
+        $(".btn").prop("disabled", true);
+        $.post(url).always(function() {
+            $(".btn").prop("disabled", false);
+        });
+    }
+
+    $(document).ready(function(){
+            $.get("config.json", function(data) {
+                updown = $("#smallupdown");
+                label = $("#smalllabel");
+
+                updown.attr("id", null);
+                label.attr("id", null);
+
+                $("#loading").fadeOut("fast", function() {
+
+                    $.each(data, function(key, val) {
+                        new_updown = updown.clone();
+                        new_label = label.clone();
+
+                        new_updown.find("#btn-up").click(function(){send_request(val, "up");});
+                        new_updown.find("#btn-st").click(function(){send_request(val, "stop");});
+                        new_updown.find("#btn-dn").click(function(){send_request(val, "down");});
+                        new_label.find('h4').text(key);
+
+                        $("#smallbuttons").append(new_updown);
+                        $("#smallbuttons").append(new_label);
+
+                        $(new_updown).fadeIn();
+                        $(new_label).fadeIn();
+                    });
+                });
+            });
+    });
+    </script>
+  </head>
+  <body>
+    <div class="container">
+        <div class="row justify-content-center align-items-center mt-5 mb-5">
+            <div class="col-12 col-md-4">
+                <h1 class="display-4 text-center">Rolek</h1>
+            </div>
+
+            <div class="w-100"></div>
+
+            <div class="col-12 col-sm-6 col-md-4">
+                <div class="btn-group btn-group-lg btn-block" role="group">
+                    <button type="button" class="btn btn-lg btn-primary" onclick="send_request([], 'up');">&#9650;</button>
+                    <button type="button" class="btn btn-lg btn-primary" onclick="send_request([], 'stop');">&#8728;</button>
+                    <button type="button" class="btn btn-lg btn-primary" onclick="send_request([], 'down');">&#9660;</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="row text-muted text-center align-items-center">
+            <div class="col-12">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="smallbuttons" class="row justify-content-left align-items-center">
+
+            <div id="smallupdown" class="col-5 col-sm-3 p-1" style="display:none">
+                <div class="btn-group btn-group-lg btn-block" role="group">
+                    <button id="btn-up" type="button" class="btn btn-primary">&#9650;</button>
+                    <button id="btn-st" type="button" class="btn btn-primary">&#8728;</button>
+                    <button id="btn-dn" type="button" class="btn btn-primary">&#9660;</button>
+                </div>
+            </div>
+            <div id="smalllabel" class="col-7 col-sm-3" style="display:none">
+                <h4 class="display-4">button</h4>
+            </div>
+
+        </div>
+
+        <hr>
+        <div class="row text-muted text-center text-small align-items-center">
+            <div class="col-12">
+                <span class="border-top"></span>
+                <p>Created by <a href="https://github.com/mlesniew">Michał Leśniewski</a>, source available <a href="https://github.com/mlesniew/ciego">on GitHub</a>.</p>
+            </div>
+        </div>
+    </div>
+  </body>
+</html>
