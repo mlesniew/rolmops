@@ -1,12 +1,13 @@
 {
-    "Parter": [1, 2, 3, 4],
-    "Pi\u0119tro": [5, 6, 7, 8],
-    "Roleta 1": [1],
-    "Roleta 2": [2],
-    "Roleta 3": [3],
-    "Roleta 4": [4],
-    "Roleta 5": [5],
-    "Roleta 6": [6],
-    "Roleta 7": [7],
-    "Roleta 8": [8]
+    "Parter": [1, 2, 3, 4, 5],
+    "Pi\u0119tro": [6, 7, 8],
+    "Jadalnia": [1, 2],
+    "Jadalnia mała": [1],
+    "Jadalnia duża": [2],
+    "Salon": [3],
+    "Biuro": [4],
+    "Kuchnia": [5],
+    "Balkon": [6],
+    "Martynka": [7],
+    "Magda": [8]
 }
