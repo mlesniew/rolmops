@@ -1,9 +1,9 @@
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
 #include <LittleFS.h>
+#include <Ticker.h>
 #include <WiFiManager.h>
 #include <list>
-#include <Ticker>
 
 #define HOSTNAME "Rolmops"
 #ifndef PASSWORD
