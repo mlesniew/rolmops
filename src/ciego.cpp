@@ -2,6 +2,7 @@
 #include <ESP8266WebServer.h>
 #include <LittleFS.h>
 #include <WiFiManager.h>
+#include <list>
 
 #define HOSTNAME "Ciego"
 #ifndef PASSWORD
@@ -12,16 +13,12 @@
 #define SR_CLCK D1
 #define SR_DATA D2
 
+#define RELAY_ACTIVE_TIME 10000
+
 ESP8266WebServer server{80};
 
 uint8_t relay_mask_up = 0;
 uint8_t relay_mask_down = 0;
-
-void reset() {
-    printf("Reset...\n");
-    ESP.restart();
-    while (1);
-}
 
 void set_relays(uint8_t up, uint8_t down) {
     digitalWrite(SR_LTCH, LOW);
@@ -35,6 +32,56 @@ void set_relays(uint8_t up, uint8_t down) {
     shiftOut(SR_DATA, SR_CLCK, MSBFIRST, ~down);
 
     digitalWrite(SR_LTCH, HIGH);
+}
+
+struct ScheduledStop {
+    ScheduledStop(uint8_t mask) : create_time(millis()), mask(mask) {}
+
+    unsigned long elapsed() const { return millis() - create_time; }
+
+    const unsigned long create_time;
+    uint8_t mask;
+};
+
+std::list<ScheduledStop> scheduled_stops;
+
+void cancel_scheduled_stops(uint8_t mask) {
+    for (auto & e: scheduled_stops) {
+        e.mask &= ~mask;
+        // TODO: remove elements with a zero mask
+    }
+}
+
+void schedule_stop(uint8_t mask) {
+    cancel_scheduled_stops(mask);
+    scheduled_stops.push_back(ScheduledStop(mask));
+}
+
+void handle_schedule_stops() {
+    if (scheduled_stops.empty()) {
+        // nothing scheduled
+        return;
+    }
+
+    const auto & front = scheduled_stops.front();
+    if (front.elapsed() < RELAY_ACTIVE_TIME) {
+        // not time for the next one yet
+        return;
+    }
+
+    // apply mask
+    relay_mask_up &= ~front.mask;
+    relay_mask_down &= ~front.mask;
+    set_relays(relay_mask_up, relay_mask_down);
+
+    // drop first element
+    scheduled_stops.pop_front();
+}
+
+void reset() {
+    printf("Reset...\n");
+    ESP.restart();
+    while (1);
 }
 
 void setup_wifi() {
@@ -82,18 +129,21 @@ void stop(uint8_t mask) {
     relay_mask_up &= ~mask;
     relay_mask_down &= ~mask;
     set_relays(relay_mask_up, relay_mask_down);
+    cancel_scheduled_stops(mask);
 }
 
 void up(uint8_t mask) {
     relay_mask_down &= ~mask;
     relay_mask_up |= mask;
     set_relays(relay_mask_up, relay_mask_down);
+    schedule_stop(mask);
 }
 
 void down(uint8_t mask) {
     relay_mask_up &= ~mask;
     relay_mask_down |= mask;
     set_relays(relay_mask_up, relay_mask_down);
+    schedule_stop(mask);
 }
 
 void setup_server() {
@@ -152,4 +202,5 @@ void setup() {
 
 void loop() {
     server.handleClient();
+    handle_schedule_stops();
 }
