@@ -14,20 +14,25 @@
 
 ESP8266WebServer server{80};
 
+uint8_t relay_mask_up = 0;
+uint8_t relay_mask_down = 0;
+
 void reset() {
     printf("Reset...\n");
     ESP.restart();
     while (1);
 }
 
-void set_relays(uint16_t data) {
+void set_relays(uint8_t up, uint8_t down) {
     digitalWrite(SR_LTCH, LOW);
 
-    uint8_t a = (data >> 8) & 0xff;
-    uint8_t b = data & 0xff;
+    // clear common bits
+    uint8_t common = up & down;
+    up &= ~common;
+    down &= ~common;
 
-    shiftOut(SR_DATA, SR_CLCK, MSBFIRST, a);
-    shiftOut(SR_DATA, SR_CLCK, MSBFIRST, b);
+    shiftOut(SR_DATA, SR_CLCK, LSBFIRST, ~up);
+    shiftOut(SR_DATA, SR_CLCK, MSBFIRST, ~down);
 
     digitalWrite(SR_LTCH, HIGH);
 }
@@ -73,16 +78,22 @@ int mask_from_comma_separated_list(const String & str) {
     return ret;
 }
 
-void up(uint8_t mask) {
+void stop(uint8_t mask) {
+    relay_mask_up &= ~mask;
+    relay_mask_down &= ~mask;
+    set_relays(relay_mask_up, relay_mask_down);
+}
 
+void up(uint8_t mask) {
+    relay_mask_down &= ~mask;
+    relay_mask_up |= mask;
+    set_relays(relay_mask_up, relay_mask_down);
 }
 
 void down(uint8_t mask) {
-
-}
-
-void stop(uint8_t mask) {
-
+    relay_mask_up &= ~mask;
+    relay_mask_down |= mask;
+    set_relays(relay_mask_up, relay_mask_down);
 }
 
 void setup_server() {
@@ -93,7 +104,7 @@ void setup_server() {
 
         /* extract mask parameter */
         if (!server.hasArg("blinds")) {
-            mask = 0xf;
+            mask = 0xff;
         } else {
             mask = mask_from_comma_separated_list(server.arg("blinds"));
             if (mask <= 0)
@@ -130,7 +141,7 @@ void setup() {
     pinMode(SR_CLCK, OUTPUT);
     pinMode(SR_DATA, OUTPUT);
 
-    set_relays(0);
+    set_relays(0, 0);
 
     LittleFS.begin();
     setup_wifi();
