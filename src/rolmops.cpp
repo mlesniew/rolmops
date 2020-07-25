@@ -16,7 +16,7 @@
 
 #define PIN_LED D4
 
-#define RELAY_ACTIVE_TIME 10000
+#define RELAY_ACTIVE_TIME (30 * 1000)
 
 ESP8266WebServer server{80};
 
