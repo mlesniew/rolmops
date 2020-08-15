@@ -12,7 +12,7 @@
 
     <!-- make it a mobile app -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#007bff">
+    <meta name="theme-color" content="#593196">
 
     <!-- favicons -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -39,28 +39,29 @@
     $(document).ready(function(){
             $.get("config.json", function(data) {
                 updown = $("#smallupdown");
-                label = $("#smalllabel");
 
                 updown.attr("id", null);
-                label.attr("id", null);
 
                 $("#loading").fadeOut("fast", function() {
 
+                    delay = 250;
+
                     $.each(data, function(key, val) {
                         new_updown = updown.clone();
-                        new_label = label.clone();
 
                         new_updown.find("#btn-up").click(function(){send_request(val, "up");});
                         new_updown.find("#btn-st").text(key).click(function(){send_request(val, "stop");});
                         new_updown.find("#btn-dn").click(function(){send_request(val, "down");});
 
                         $("#smallbuttons").append(new_updown);
-                        $("#smallbuttons").append(new_label);
 
-                        $(new_updown).fadeIn();
-                        $(new_label).fadeIn();
+                        $(new_updown).delay(delay).fadeIn();
+
+                        delay += 25;
                     });
+
                 });
+
             });
     });
     </script>
@@ -76,9 +77,9 @@
 
             <div class="col-12 col-sm-6 col-md-4">
                 <div class="btn-group btn-group-lg btn-block" role="group">
-                    <button type="button" class="btn btn-lg btn-primary" onclick="send_request([], 'up');">&#9650;</button>
-                    <button type="button" class="btn btn-lg btn-primary" onclick="send_request([], 'stop');">&#8728;</button>
                     <button type="button" class="btn btn-lg btn-primary" onclick="send_request([], 'down');">&#9660;</button>
+                    <button type="button" class="btn btn-lg btn-block btn-primary" onclick="send_request([], 'stop');">&#8728;</button>
+                    <button type="button" class="btn btn-lg btn-primary" onclick="send_request([], 'up');">&#9650;</button>
                 </div>
             </div>
         </div>
@@ -95,9 +96,9 @@
 
             <div id="smallupdown" class="col-12 col-sm-6 col-md-4 p-1" style="display:none">
                 <div class="btn-group btn-group-lg btn-block" role="group">
-                    <button id="btn-up" type="button" class="btn btn-primary">&#9650;</button>
-                    <button id="btn-st" type="button" class="btn btn-primary">&#8728;</button>
                     <button id="btn-dn" type="button" class="btn btn-primary">&#9660;</button>
+                    <button id="btn-st" type="button" class="btn btn-block btn-primary">&#8728;</button>
+                    <button id="btn-up" type="button" class="btn btn-primary">&#9650;</button>
                 </div>
             </div>
 
