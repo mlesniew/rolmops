@@ -1,9 +1,16 @@
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
-#include <LittleFS.h>
 #include <Ticker.h>
 #include <WiFiManager.h>
 #include <list>
+
+#ifdef USE_LITTLEFS
+#include <LittleFS.h>
+#define FileSystem LittleFS
+#else
+#include <FS.h>
+#define FileSystem SPIFFS
+#endif
 
 #define HOSTNAME "Rolmops"
 #ifndef PASSWORD
@@ -186,8 +193,8 @@ void setup_server() {
             server.send(200, "text/plain", HOSTNAME " " __DATE__ " " __TIME__);
             });
 
-    server.serveStatic("/", LittleFS, "/index.html");
-    server.serveStatic("/", LittleFS, "/");
+    server.serveStatic("/", FileSystem, "/index.html");
+    server.serveStatic("/", FileSystem, "/");
 
     server.begin();
 }
@@ -216,7 +223,7 @@ void setup() {
     pinMode(SR_DATA, OUTPUT);
     set_relays(0, 0);
 
-    LittleFS.begin();
+    FileSystem.begin();
     setup_wifi();
     setup_server();
 
