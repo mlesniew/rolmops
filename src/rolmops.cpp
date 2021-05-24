@@ -38,8 +38,8 @@ void set_relays(uint8_t up, uint8_t down) {
     up &= ~common;
     down &= ~common;
 
-    shiftOut(SR_DATA, SR_CLCK, LSBFIRST, ~up);
     shiftOut(SR_DATA, SR_CLCK, MSBFIRST, ~down);
+    shiftOut(SR_DATA, SR_CLCK, MSBFIRST, ~up);
 
     digitalWrite(SR_LTCH, HIGH);
 }
