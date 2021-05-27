@@ -188,14 +188,14 @@ void setup_server() {
 
 void setup() {
     Serial.begin(9600);
-    printf(
+    Serial.print(F(
         "88''Yb  dP'Yb  88     8b    d8  dP'Yb  88''Yb .dP'Y8\n"
         "88__dP dP   Yb 88     88b  d88 dP   Yb 88__dP `Ybo.'\n"
         "88'Yb  Yb   dP 88  .o 88YbdP88 Yb   dP 88'''  o.`Y8b\n"
         "88  Yb  YbodP  88ood8 88 YY 88  YbodP  88     8bodP'\n\n"
-        HOSTNAME " " __DATE__ " " __TIME__ "\n\n");
+        HOSTNAME " " __DATE__ " " __TIME__ "\n\n"));
 
-    printf("Setup...\n");
+    Serial.print(F("Setup...\n"));
 
     pinMode(SR_LTCH, OUTPUT);
     pinMode(SR_CLCK, OUTPUT);
@@ -203,7 +203,7 @@ void setup() {
     set_relays(0, 0);
 
     if (!wifi_control.init(WiFiInitMode::automatic, HOSTNAME, PASSWORD, 5 * 60)) {
-        Serial.println("Connection setup failed.");
+        Serial.println(F("Connection setup failed."));
         reset();
     }
 
@@ -212,7 +212,7 @@ void setup() {
     MDNS.begin(HOSTNAME);
     setup_server();
 
-    printf("Setup complete.\n");
+    Serial.print(F("Setup complete.\n"));
 }
 
 void loop() {
