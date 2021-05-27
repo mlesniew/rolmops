@@ -5,12 +5,12 @@
 #include <WiFiManager.h>
 #include <list>
 
-#ifdef USE_LITTLEFS
-#include <LittleFS.h>
-#define FileSystem LittleFS
-#else
+#ifdef USE_SPIFFS
 #include <FS.h>
 #define FileSystem SPIFFS
+#else
+#include <LittleFS.h>
+#define FileSystem LittleFS
 #endif
 
 #define HOSTNAME "Rolmops"
