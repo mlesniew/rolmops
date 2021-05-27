@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
 #include <Ticker.h>
 #include <WiFiManager.h>
 #include <list>
@@ -225,6 +226,7 @@ void setup() {
 
     FileSystem.begin();
     setup_wifi();
+    MDNS.begin("rolmops");
     setup_server();
 
     printf("Setup complete.\n");
@@ -259,6 +261,7 @@ void check_wifi() {
 }
 
 void loop() {
+    MDNS.update();
     server.handleClient();
     handle_schedule_stops();
     check_wifi();
