@@ -187,6 +187,11 @@ void setup_server() {
 }
 
 void setup() {
+    pinMode(SR_LTCH, OUTPUT);
+    pinMode(SR_CLCK, OUTPUT);
+    pinMode(SR_DATA, OUTPUT);
+    set_relays(0, 0);
+
     Serial.begin(9600);
     Serial.print(F(
         "88''Yb  dP'Yb  88     8b    d8  dP'Yb  88''Yb .dP'Y8\n"
@@ -196,11 +201,6 @@ void setup() {
         HOSTNAME " " __DATE__ " " __TIME__ "\n\n"));
 
     Serial.print(F("Setup...\n"));
-
-    pinMode(SR_LTCH, OUTPUT);
-    pinMode(SR_CLCK, OUTPUT);
-    pinMode(SR_DATA, OUTPUT);
-    set_relays(0, 0);
 
     if (!wifi_control.init(WiFiInitMode::automatic, HOSTNAME, PASSWORD, 5 * 60)) {
         Serial.println(F("Connection setup failed."));
