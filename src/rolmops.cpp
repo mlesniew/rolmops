@@ -148,10 +148,7 @@ void down(uint8_t mask) {
 
 void setup_server() {
 
-    auto handler = [](std::function<void(uint8_t)> fn){
-        wifi_led.set_pattern(0b10);
-        BackgroundBlinker blinker(wifi_led);
-
+    auto handler = [](std::function<void(uint8_t)> fn) {
         uint8_t mask = 0;
 
         /* extract mask parameter */
@@ -169,7 +166,6 @@ void setup_server() {
         fn(mask);
 
         server.send(200, "text/plain", "OK");
-        wifi_led.set_pattern(0);
     };
 
     server.on("/up", [handler]{ handler(up); });
