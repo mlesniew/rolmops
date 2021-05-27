@@ -194,10 +194,12 @@ void setup() {
 
     Serial.begin(9600);
     Serial.print(F(
+        "\n\n"
         "88''Yb  dP'Yb  88     8b    d8  dP'Yb  88''Yb .dP'Y8\n"
         "88__dP dP   Yb 88     88b  d88 dP   Yb 88__dP `Ybo.'\n"
         "88'Yb  Yb   dP 88  .o 88YbdP88 Yb   dP 88'''  o.`Y8b\n"
         "88  Yb  YbodP  88ood8 88 YY 88  YbodP  88     8bodP'\n\n"
+        "https://github.com/mlesniew/rolmops\n\n"
         HOSTNAME " " __DATE__ " " __TIME__ "\n\n"));
 
     Serial.print(F("Setup...\n"));
