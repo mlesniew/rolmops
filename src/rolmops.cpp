@@ -1,9 +1,13 @@
+#include <list>
+
 #include <Arduino.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <Ticker.h>
-#include <WiFiManager.h>
-#include <list>
+
+#include <utils/led.h>
+#include <utils/reset.h>
+#include <utils/wifi_control.h>
 
 #ifdef USE_SPIFFS
 #include <FS.h>
@@ -26,6 +30,8 @@
 
 #define RELAY_ACTIVE_TIME (30 * 1000)
 
+BlinkingLed wifi_led(PIN_LED, 0, 91, true);
+WiFiControl wifi_control(wifi_led);
 ESP8266WebServer server{80};
 
 uint8_t relay_mask_up = 0;
@@ -89,23 +95,6 @@ void handle_schedule_stops() {
     scheduled_stops.pop_front();
 }
 
-void reset() {
-    printf("Reset...\n");
-    ESP.restart();
-    while (1);
-}
-
-void setup_wifi() {
-    WiFi.hostname(HOSTNAME);
-    WiFiManager wifiManager;
-
-    wifiManager.setConfigPortalTimeout(60 * 10);
-    if (!wifiManager.autoConnect(HOSTNAME, PASSWORD)) {
-        printf("AutoConnect failed.\n");
-        reset();
-    }
-}
-
 int mask_from_comma_separated_list(const String & str) {
     int ret = 0;
     int start_idx = 0;
@@ -160,12 +149,8 @@ void down(uint8_t mask) {
 void setup_server() {
 
     auto handler = [](std::function<void(uint8_t)> fn){
-
-        Ticker ticker;
-        ticker.attach_ms(50, []{
-            const auto current_state = digitalRead(PIN_LED);
-            digitalWrite(PIN_LED, !current_state);
-            });
+        wifi_led.set_pattern(0b10);
+        BackgroundBlinker blinker(wifi_led);
 
         uint8_t mask = 0;
 
@@ -184,6 +169,7 @@ void setup_server() {
         fn(mask);
 
         server.send(200, "text/plain", "OK");
+        wifi_led.set_pattern(0);
     };
 
     server.on("/up", [handler]{ handler(up); });
@@ -211,58 +197,27 @@ void setup() {
 
     printf("Setup...\n");
 
-    // blink the diode really fast until setup() exits
-    pinMode(PIN_LED, OUTPUT);
-    Ticker ticker;
-    ticker.attach_ms(256, []{
-        const auto current_state = digitalRead(PIN_LED);
-        digitalWrite(PIN_LED, !current_state);
-        });
-
     pinMode(SR_LTCH, OUTPUT);
     pinMode(SR_CLCK, OUTPUT);
     pinMode(SR_DATA, OUTPUT);
     set_relays(0, 0);
 
+    if (!wifi_control.init(WiFiInitMode::automatic, HOSTNAME, PASSWORD, 5 * 60)) {
+        Serial.println("Connection setup failed.");
+        reset();
+    }
+
     FileSystem.begin();
-    setup_wifi();
-    MDNS.begin("rolmops");
+
+    MDNS.begin(HOSTNAME);
     setup_server();
 
     printf("Setup complete.\n");
 }
 
-void check_wifi() {
-    static unsigned long wifi_last_connected = millis();
-    static auto wifi_last_status = WiFi.status();
-
-    const auto wifi_current_status = WiFi.status();
-    const bool connected = (wifi_current_status == WL_CONNECTED);
-
-    if (wifi_current_status != wifi_last_status) {
-        printf("WiFi %s (status changed to %i)\n", connected ? "connected" : "disconnected", wifi_current_status);
-        wifi_last_status = wifi_current_status;
-    }
-
-    if (connected) {
-        wifi_last_connected = millis();
-    } else if (millis() - wifi_last_connected > 2 * 60 * 1000) {
-        printf("WiFi has been disconnected for too long.\n");
-        reset();
-    }
-
-    {
-        // blink the builtin led to indicate WiFi state
-        const unsigned int mask = connected ? 0b1111 : 0b100;
-        // 1 tick ~= 128ms, 8 ticks ~= 1s
-        const auto blink_phase = (millis() >> 8) & mask;
-        digitalWrite(PIN_LED, (blink_phase == 0) ? LOW : HIGH);
-    }
-}
-
 void loop() {
+    wifi_control.tick();
     MDNS.update();
     server.handleClient();
     handle_schedule_stops();
-    check_wifi();
 }
