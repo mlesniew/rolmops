@@ -17,9 +17,9 @@
 #define FileSystem LittleFS
 #endif
 
-#define HOSTNAME "Rolmops"
+#define HOSTNAME "rolmops"
 #ifndef PASSWORD
-#define PASSWORD "rolek"
+#define PASSWORD "findesemana"
 #endif
 
 #define SR_LTCH D0
@@ -37,6 +37,49 @@ ESP8266WebServer server{80};
 uint8_t relay_mask_up = 0;
 uint8_t relay_mask_down = 0;
 
+void apply_swaps(uint8_t & up, uint8_t & down) {
+    enum Direction { UP, DOWN };
+
+    struct Bit {
+        uint8_t bit;
+        Direction direction;
+    };
+
+    struct Swap {
+        Bit first;
+        Bit second;
+    };
+
+    const Swap swaps[] = {
+        { { 4, DOWN }, { 1, DOWN } },
+        { { 2, DOWN }, { 3, DOWN } },
+        { { 1, UP }, { 2, UP } },
+        { { 7, DOWN }, { 7, UP } }
+    };
+
+    for (const Swap & swap : swaps) {
+        uint8_t & first_byte = swap.first.direction == UP ? up : down;
+        uint8_t & second_byte = swap.second.direction == UP ? up : down;
+
+        // read bit values
+        bool first_bit = first_byte & (1 << (swap.first.bit - 1));
+        bool second_bit = second_byte & (1 << (swap.second.bit - 1));
+
+        // set new values
+        if (second_bit) {
+            first_byte |= 1 << (swap.first.bit - 1);
+        } else {
+            first_byte &= ~(1 << (swap.first.bit - 1));
+        }
+
+        if (first_bit) {
+            second_byte |= 1 << (swap.second.bit - 1);
+        } else {
+            second_byte &= ~(1 << (swap.second.bit - 1));
+        }
+    };
+}
+
 void set_relays(uint8_t up, uint8_t down) {
     digitalWrite(SR_LTCH, LOW);
 
@@ -44,6 +87,8 @@ void set_relays(uint8_t up, uint8_t down) {
     uint8_t common = up & down;
     up &= ~common;
     down &= ~common;
+
+    apply_swaps(up, down);
 
     shiftOut(SR_DATA, SR_CLCK, MSBFIRST, ~down);
     shiftOut(SR_DATA, SR_CLCK, MSBFIRST, ~up);
